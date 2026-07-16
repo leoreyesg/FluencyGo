@@ -96,12 +96,26 @@ export default function Home() {
     synth.speak(utterance);
   };
 
-  const level =
-    xp >= 500
-      ? "Advanced"
-      : xp >= 200
-      ? "Intermediate"
-      : "Rookie";
+  
+const level =
+  xp >= 1000
+    ? "🏆 Native Challenger"
+    : xp >= 700
+    ? "🎯 Fluent"
+    : xp >= 400
+    ? "💼 Professional"
+    : xp >= 200
+    ? "🚀 Explorer"
+    : "🌱 Beginner"
+;
+
+
+const dailyGoal = 200;
+
+const progressPercentage = Math.min(
+  (xp / dailyGoal) * 100,
+  100
+);
 
   return (
     <main className="min-h-screen bg-slate-100 p-8">
@@ -118,6 +132,28 @@ export default function Home() {
         <p className="text-sm text-gray-400 mb-8">
           FluencyGo v0.8
         </p>
+
+        
+    <div className="mb-8">
+
+      <div className="flex justify-between text-sm mb-2">
+        <span>Daily Goal</span>
+        <span>{xp}/{dailyGoal} XP</span>
+      </div>
+
+      <div className="w-full bg-gray-200 rounded-full h-4">
+
+        <div
+          className="bg-green-500 h-4 rounded-full"
+          style={{
+            width: `${progressPercentage}%`,
+          }}
+        />
+
+      </div>
+
+</div>
+
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
 
