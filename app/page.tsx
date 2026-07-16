@@ -9,7 +9,11 @@ type CategoryKey = keyof typeof categories;
 export default function Home() {
   const [xp, setXp] = useState(0);
   const [index, setIndex] = useState(0);
+
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [completedPhrases, setCompletedPhrases] =
+    useState<string[]>([]);
+
   const [category, setCategory] =
     useState<CategoryKey>("Native English");
 
@@ -26,6 +30,15 @@ export default function Home() {
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
     }
+
+    const savedCompleted =
+      localStorage.getItem("completedPhrases");
+
+    if (savedCompleted) {
+      setCompletedPhrases(
+        JSON.parse(savedCompleted)
+      );
+    }
   }, []);
 
   useEffect(() => {
@@ -39,11 +52,31 @@ export default function Home() {
     );
   }, [favorites]);
 
+  useEffect(() => {
+    localStorage.setItem(
+      "completedPhrases",
+      JSON.stringify(completedPhrases)
+    );
+  }, [completedPhrases]);
+
   const currentPhrase =
     categories[category][index];
 
   const completePhrase = () => {
+    if (
+      completedPhrases.includes(
+        currentPhrase
+      )
+    ) {
+      return;
+    }
+
     setXp((prev) => prev + 10);
+
+    setCompletedPhrases([
+      ...completedPhrases,
+      currentPhrase,
+    ]);
   };
 
   const nextPhrase = () => {
@@ -96,26 +129,23 @@ export default function Home() {
     synth.speak(utterance);
   };
 
-  
-const level =
-  xp >= 1000
-    ? "🏆 Native Challenger"
-    : xp >= 700
-    ? "🎯 Fluent"
-    : xp >= 400
-    ? "💼 Professional"
-    : xp >= 200
-    ? "🚀 Explorer"
-    : "🌱 Beginner"
-;
+  const level =
+    xp >= 1000
+      ? "🏆 Native Challenger"
+      : xp >= 700
+      ? "🎯 Fluent"
+      : xp >= 400
+      ? "💼 Professional"
+      : xp >= 200
+      ? "🚀 Explorer"
+      : "🌱 Beginner";
 
+  const dailyGoal = 200;
 
-const dailyGoal = 200;
-
-const progressPercentage = Math.min(
-  (xp / dailyGoal) * 100,
-  100
-);
+  const progressPercentage = Math.min(
+    (xp / dailyGoal) * 100,
+    100
+  );
 
   return (
     <main className="min-h-screen bg-slate-100 p-8">
@@ -129,31 +159,31 @@ const progressPercentage = Math.min(
           Personal AI English Coach
         </p>
 
-        <p className="text-sm text-gray-400 mb-8">
-          FluencyGo v0.8
+        <p className="text-sm text-gray-400 mb-4">
+          FluencyGo v0.9.1
         </p>
 
-        
-    <div className="mb-8">
+        <div className="mb-8">
 
-      <div className="flex justify-between text-sm mb-2">
-        <span>Daily Goal</span>
-        <span>{xp}/{dailyGoal} XP</span>
-      </div>
+          <div className="flex justify-between text-sm mb-2">
+            <span>Daily Goal</span>
+            <span>
+              {xp}/{dailyGoal} XP
+            </span>
+          </div>
 
-      <div className="w-full bg-gray-200 rounded-full h-4">
+          <div className="w-full bg-gray-200 rounded-full h-4">
 
-        <div
-          className="bg-green-500 h-4 rounded-full"
-          style={{
-            width: `${progressPercentage}%`,
-          }}
-        />
+            <div
+              className="bg-green-500 h-4 rounded-full"
+              style={{
+                width: `${progressPercentage}%`,
+              }}
+            />
 
-      </div>
+          </div>
 
-</div>
-
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
 
@@ -171,7 +201,7 @@ const progressPercentage = Math.min(
             <h2 className="font-bold">
               Completed
             </h2>
-            <p>{Math.floor(xp / 10)}</p>
+            <p>{completedPhrases.length}</p>
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow">
@@ -216,9 +246,17 @@ const progressPercentage = Math.min(
             {category}
           </h2>
 
-          <p className="text-4xl mb-6">
+          <p className="text-4xl mb-4">
             {currentPhrase}
           </p>
+
+          {completedPhrases.includes(
+            currentPhrase
+          ) && (
+            <p className="text-green-600 font-bold mb-4">
+              ✅ Completed
+            </p>
+          )}
 
           <div className="flex flex-wrap gap-3">
 
@@ -274,4 +312,3 @@ const progressPercentage = Math.min(
     </main>
   );
 }
-
