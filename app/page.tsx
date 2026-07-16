@@ -1,0 +1,241 @@
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { categories } from "../data/phrases";
+
+type CategoryKey = keyof typeof categories;
+
+export default function Home() {
+  const [xp, setXp] = useState(0);
+  const [index, setIndex] = useState(0);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [category, setCategory] =
+    useState<CategoryKey>("Native English");
+
+  useEffect(() => {
+    const savedXp = localStorage.getItem("xp");
+
+    if (savedXp) {
+      setXp(Number(savedXp));
+    }
+
+    const savedFavorites =
+      localStorage.getItem("favorites");
+
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("xp", xp.toString());
+  }, [xp]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "favorites",
+      JSON.stringify(favorites)
+    );
+  }, [favorites]);
+
+  const currentPhrase =
+    categories[category][index];
+
+  const completePhrase = () => {
+    setXp((prev) => prev + 10);
+  };
+
+  const nextPhrase = () => {
+    setIndex(
+      (prev) =>
+        (prev + 1) %
+        categories[category].length
+    );
+  };
+
+  const toggleFavorite = () => {
+    if (favorites.includes(currentPhrase)) {
+      setFavorites(
+        favorites.filter(
+          (item) => item !== currentPhrase
+        )
+      );
+    } else {
+      setFavorites([
+        ...favorites,
+        currentPhrase,
+      ]);
+    }
+  };
+
+  const speakPhrase = () => {
+    const synth = window.speechSynthesis;
+
+    synth.cancel();
+
+    const utterance =
+      new SpeechSynthesisUtterance(
+        currentPhrase
+      );
+
+    const voices = synth.getVoices();
+
+    const englishVoice = voices.find(
+      (voice) =>
+        voice.lang.startsWith("en")
+    );
+
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    }
+
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    synth.speak(utterance);
+  };
+
+  const level =
+    xp >= 500
+      ? "Advanced"
+      : xp >= 200
+      ? "Intermediate"
+      : "Rookie";
+
+  return (
+    <main className="min-h-screen bg-slate-100 p-8">
+      <div className="max-w-6xl mx-auto">
+
+        <h1 className="text-5xl font-bold mb-2">
+          FluencyGo
+        </h1>
+
+        <p className="text-gray-600">
+          Personal AI English Coach
+        </p>
+
+        <p className="text-sm text-gray-400 mb-8">
+          FluencyGo v0.8
+        </p>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="font-bold">XP</h2>
+            <p>{xp}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="font-bold">Level</h2>
+            <p>{level}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="font-bold">
+              Completed
+            </h2>
+            <p>{Math.floor(xp / 10)}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="font-bold">
+              Favorites
+            </h2>
+            <p>{favorites.length}</p>
+          </div>
+
+        </div>
+
+        <div className="bg-white p-8 rounded-xl shadow">
+
+          <div className="mb-6">
+
+            <label className="font-bold mr-3">
+              Category:
+            </label>
+
+            <select
+              value={category}
+              onChange={(e) => {
+                setCategory(
+                  e.target.value as CategoryKey
+                );
+                setIndex(0);
+              }}
+              className="border p-2 rounded"
+            >
+              {Object.keys(categories).map(
+                (cat) => (
+                  <option key={cat}>
+                    {cat}
+                  </option>
+                )
+              )}
+            </select>
+
+          </div>
+
+          <h2 className="text-lg font-bold mb-3">
+            {category}
+          </h2>
+
+          <p className="text-4xl mb-6">
+            {currentPhrase}
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+
+            <button
+              onClick={speakPhrase}
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg"
+            >
+              🔊 Listen
+            </button>
+
+            <button
+              onClick={completePhrase}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg"
+            >
+              ✅ Complete +10 XP
+            </button>
+
+            <button
+              onClick={nextPhrase}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+            >
+              ➡️ Next
+            </button>
+
+            <button
+              onClick={toggleFavorite}
+              className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+            >
+              ⭐ Favorite
+            </button>
+
+          </div>
+
+          <div className="mt-8">
+
+            <h3 className="font-bold mb-2">
+              Saved Favorites
+            </h3>
+
+            <ul className="list-disc pl-5">
+              {favorites.map((item) => (
+                <li key={item}>
+                  {item}
+                </li>
+              ))}
+            </ul>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  );
+}
+
