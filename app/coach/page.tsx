@@ -5,32 +5,39 @@ import { useState } from "react";
 
 export default function CoachPage() {
   const [input, setInput] = useState("");
-  const [analysis, setAnalysis] = useState("");
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const analyzeEnglish = () => {
+  const analyzeEnglish = async () => {
     if (!input.trim()) return;
 
-    setAnalysis(`
-IMPROVED VERSION
+    setLoading(true);
 
-${input}
+    try {
+      const result = await fetch("/api/coach", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: input,
+        }),
+      });
 
-VOCABULARY
+      const data = await result.json();
 
-• Professional communication
-• Workplace English
-• Business vocabulary
+      setResponse(
+        data.response || data.error
+      );
+    } catch (error) {
+      console.error(error);
 
-ASSESSMENT
+      setResponse(
+        "Error connecting to AI Coach."
+      );
+    }
 
-Level: B1
-
-FEEDBACK
-
-Your sentence is understandable.
-AI integration will soon provide grammar corrections,
-fluency suggestions and pronunciation coaching.
-    `);
+    setLoading(false);
   };
 
   return (
@@ -42,36 +49,43 @@ fluency suggestions and pronunciation coaching.
         </h1>
 
         <p className="text-gray-600 mb-8">
-          FluencyGo v0.11
+          FluencyGo AI
         </p>
 
         <div className="bg-white p-8 rounded-xl shadow">
 
-          <h2 className="text-xl font-bold mb-4">
-            Improve My English
-          </h2>
-
           <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) =>
+              setInput(e.target.value)
+            }
             placeholder="Write something in English..."
             className="w-full h-40 border rounded-lg p-4 mb-4"
           />
 
           <button
             onClick={analyzeEnglish}
+            disabled={loading}
             className="bg-blue-600 text-white px-5 py-3 rounded-lg"
           >
-            Analyze
+            {loading
+              ? "Analyzing..."
+              : "Analyze"}
           </button>
 
         </div>
 
-        {analysis && (
+        {response && (
           <div className="bg-white p-8 rounded-xl shadow mt-6">
-            <pre className="whitespace-pre-wrap">
-              {analysis}
-            </pre>
+
+            <h2 className="font-bold mb-4">
+              AI Feedback
+            </h2>
+
+            <div className="whitespace-pre-wrap">
+              {response}
+            </div>
+
           </div>
         )}
 
