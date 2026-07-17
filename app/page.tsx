@@ -14,29 +14,45 @@ export default function Home() {
   const [completedPhrases, setCompletedPhrases] =
     useState<string[]>([]);
 
+  const [streak, setStreak] = useState(1);
+  const [lastPracticeDate, setLastPracticeDate] =
+    useState("");
+
   const [category, setCategory] =
     useState<CategoryKey>("Native English");
 
   useEffect(() => {
     const savedXp = localStorage.getItem("xp");
+    const savedFavorites =
+      localStorage.getItem("favorites");
+    const savedCompleted =
+      localStorage.getItem("completedPhrases");
+    const savedStreak =
+      localStorage.getItem("streak");
+    const savedLastPracticeDate =
+      localStorage.getItem("lastPracticeDate");
 
     if (savedXp) {
       setXp(Number(savedXp));
     }
 
-    const savedFavorites =
-      localStorage.getItem("favorites");
-
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
     }
 
-    const savedCompleted =
-      localStorage.getItem("completedPhrases");
-
     if (savedCompleted) {
       setCompletedPhrases(
         JSON.parse(savedCompleted)
+      );
+    }
+
+    if (savedStreak) {
+      setStreak(Number(savedStreak));
+    }
+
+    if (savedLastPracticeDate) {
+      setLastPracticeDate(
+        savedLastPracticeDate
       );
     }
   }, []);
@@ -59,6 +75,20 @@ export default function Home() {
     );
   }, [completedPhrases]);
 
+  useEffect(() => {
+    localStorage.setItem(
+      "streak",
+      streak.toString()
+    );
+  }, [streak]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "lastPracticeDate",
+      lastPracticeDate
+    );
+  }, [lastPracticeDate]);
+
   const currentPhrase =
     categories[category][index];
 
@@ -70,6 +100,22 @@ export default function Home() {
     ) {
       return;
     }
+
+    const today =
+      new Date().toDateString();
+
+    if (
+      lastPracticeDate &&
+      lastPracticeDate !== today
+    ) {
+      setStreak((prev) => prev + 1);
+    }
+
+    if (!lastPracticeDate) {
+      setStreak(1);
+    }
+
+    setLastPracticeDate(today);
 
     setXp((prev) => prev + 10);
 
@@ -123,9 +169,6 @@ export default function Home() {
       utterance.voice = englishVoice;
     }
 
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
     synth.speak(utterance);
   };
 
@@ -160,11 +203,10 @@ export default function Home() {
         </p>
 
         <p className="text-sm text-gray-400 mb-4">
-          FluencyGo v0.9.1
+          FluencyGo v0.10
         </p>
 
         <div className="mb-8">
-
           <div className="flex justify-between text-sm mb-2">
             <span>Daily Goal</span>
             <span>
@@ -173,19 +215,16 @@ export default function Home() {
           </div>
 
           <div className="w-full bg-gray-200 rounded-full h-4">
-
             <div
               className="bg-green-500 h-4 rounded-full"
               style={{
                 width: `${progressPercentage}%`,
               }}
             />
-
           </div>
-
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
 
           <div className="bg-white p-6 rounded-xl shadow">
             <h2 className="font-bold">XP</h2>
@@ -211,12 +250,18 @@ export default function Home() {
             <p>{favorites.length}</p>
           </div>
 
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="font-bold">
+              🔥 Streak
+            </h2>
+            <p>{streak} Days</p>
+          </div>
+
         </div>
 
         <div className="bg-white p-8 rounded-xl shadow">
 
           <div className="mb-6">
-
             <label className="font-bold mr-3">
               Category:
             </label>
@@ -239,7 +284,6 @@ export default function Home() {
                 )
               )}
             </select>
-
           </div>
 
           <h2 className="text-lg font-bold mb-3">
